@@ -67,6 +67,8 @@ def update_asset_metadata(
     user_metadata: UserMetadata = None,
     tag_origin: str = "manual",
     owner_id: str = "",
+    mime_type: str | None = None,
+    preview_id: str | None = None,
 ) -> AssetDetailResult:
     with create_session() as session:
         ref = get_reference_with_owner_check(session, reference_id, owner_id)
@@ -100,6 +102,21 @@ def update_asset_metadata(
                 reference_id=reference_id,
                 tags=tags,
                 origin=tag_origin,
+            )
+            touched = True
+
+        if mime_type is not None:
+            from app.assets.database.queries import update_asset_hash_and_mime
+            update_asset_hash_and_mime(
+                session, asset_id=ref.asset_id, mime_type=mime_type
+            )
+            touched = True
+
+        if preview_id is not None:
+            set_reference_preview(
+                session,
+                reference_id=reference_id,
+                preview_asset_id=preview_id,
             )
             touched = True
 
